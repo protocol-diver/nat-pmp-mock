@@ -91,6 +91,11 @@ func (p *mockNAT) ExternalIP() net.IP {
 	return p.externalIP
 }
 
+func (p *mockNAT) Run() {
+	atomic.StoreUint32(&p.isRun, 1)
+	go p.run()
+}
+
 func (p *mockNAT) Close() error {
 	atomic.StoreUint32(&p.isRun, 0)
 	return p.conn.Close()
@@ -104,11 +109,6 @@ func (p *mockNAT) Map(protocol string, extport uint16) *Internal {
 
 func (p *mockNAT) Epoch() uint32 {
 	return atomic.LoadUint32(&p.epoch)
-}
-
-func (p *mockNAT) Run() {
-	atomic.StoreUint32(&p.isRun, 1)
-	go p.run()
 }
 
 func (p *mockNAT) run() {
