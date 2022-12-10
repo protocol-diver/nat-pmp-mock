@@ -124,9 +124,11 @@ func (p *mockNAT) run() {
 	}()
 
 	for {
+		// Check state is running
 		if atomic.LoadUint32(&p.isRun) == 0 {
 			return
 		}
+		// Read process
 		b := make([]byte, 12)
 		len, sender, err := p.conn.ReadFromUDP(b)
 		if err != nil {
