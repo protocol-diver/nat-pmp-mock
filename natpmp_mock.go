@@ -26,7 +26,7 @@ type mockNAT struct {
 	supportedPMP uint32 // flag; 0: unsupport, 1: support
 
 	mu      sync.Mutex
-	mapping map[string]map[uint16]Internal // Mapping protocol to external port
+	mapping map[string]map[uint16]*Internal // Mapping protocol to external port
 }
 
 // Internal stores the internal port number and the expiration timer
@@ -84,15 +84,15 @@ func (p *mockNAT) LocalAddr() net.Addr {
 	return p.conn.LocalAddr()
 }
 
-func (p *mockNAT) RemoteAddr() net.Addr {
-	return p.conn.RemoteAddr()
+func (p *mockNAT) RemoteIP() net.IP {
+	return p.externalIP
 }
 
 func (p *mockNAT) Close() error {
 	return p.conn.Close()
 }
 
-func (p *mockNAT) Map(protocol string, extport uint16) Internal {
+func (p *mockNAT) Map(protocol string, extport uint16) *Internal {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 	return p.mapping[protocol][extport]
@@ -103,6 +103,10 @@ func (p *mockNAT) Epoch() uint32 {
 }
 
 func (p *mockNAT) Run() {
+	go p.run()
+}
+
+func (p *mockNAT) run() {
 	// Count Seconds Since Start of Epoch.
 	go func() {
 		for {
@@ -231,7 +235,7 @@ func (p *mockNAT) handleMappingOpcode(b []byte, protocol string, opcode byte) (r
 //
 // The caller must hold p.mu.
 func (p *mockNAT) addExternal(protocol string, extport, intport uint16, duration time.Duration) {
-	e := Internal{
+	e := &Internal{
 		Port:  intport,
 		timer: time.NewTimer(duration),
 	}
@@ -270,9 +274,9 @@ func parseMappingRequest(b []byte) (uint16, uint16, uint32) {
 	return binary.BigEndian.Uint16(b[4:6]), binary.BigEndian.Uint16(b[6:8]), binary.BigEndian.Uint32(b[8:12])
 }
 
-func makeProtocolMap() map[string]map[uint16]Internal {
-	m := make(map[string]map[uint16]Internal)
-	m["tcp"] = make(map[uint16]Internal)
-	m["udp"] = make(map[uint16]Internal)
+func makeProtocolMap() map[string]map[uint16]*Internal {
+	m := make(map[string]map[uint16]*Internal)
+	m["tcp"] = make(map[uint16]*Internal)
+	m["udp"] = make(map[uint16]*Internal)
 	return m
 }
