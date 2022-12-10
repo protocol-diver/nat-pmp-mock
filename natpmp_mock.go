@@ -20,10 +20,13 @@ const (
 )
 
 type mockNAT struct {
-	conn         *net.UDPConn
-	externalIP   net.IP
-	epoch        uint32
-	supportedPMP uint32 // flag; 0: unsupport, 1: support
+	conn       *net.UDPConn
+	externalIP net.IP
+	epoch      uint32
+
+	// flag; 0: negative, 1: positive
+	supportedPMP uint32
+	isRun        uint32
 
 	mu      sync.Mutex
 	mapping map[string]map[uint16]*Internal // Mapping protocol to external port
@@ -89,6 +92,7 @@ func (p *mockNAT) ExternalIP() net.IP {
 }
 
 func (p *mockNAT) Close() error {
+	atomic.StoreUint32(&p.isRun, 0)
 	return p.conn.Close()
 }
 
@@ -103,6 +107,7 @@ func (p *mockNAT) Epoch() uint32 {
 }
 
 func (p *mockNAT) Run() {
+	atomic.StoreUint32(&p.isRun, 1)
 	go p.run()
 }
 
@@ -111,11 +116,17 @@ func (p *mockNAT) run() {
 	go func() {
 		for {
 			time.Sleep(time.Millisecond)
+			if atomic.LoadUint32(&p.isRun) == 0 {
+				return
+			}
 			atomic.AddUint32(&p.epoch, 1)
 		}
 	}()
 
 	for {
+		if atomic.LoadUint32(&p.isRun) == 0 {
+			return
+		}
 		b := make([]byte, 12)
 		len, sender, err := p.conn.ReadFromUDP(b)
 		if err != nil {
