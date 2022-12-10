@@ -84,7 +84,7 @@ func (p *mockNAT) LocalAddr() net.Addr {
 	return p.conn.LocalAddr()
 }
 
-func (p *mockNAT) RemoteIP() net.IP {
+func (p *mockNAT) ExternalIP() net.IP {
 	return p.externalIP
 }
 
