@@ -116,6 +116,8 @@ func (p *mockNAT) run() {
 	go func() {
 		for {
 			time.Sleep(time.Millisecond)
+			
+			// Check state is running
 			if atomic.LoadUint32(&p.isRun) == 0 {
 				return
 			}
