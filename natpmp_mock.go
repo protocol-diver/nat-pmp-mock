@@ -208,7 +208,7 @@ func (p *mockNAT) handleMappingOpcode(b []byte, protocol string, opcode byte) (r
 	defer p.mu.Unlock()
 	v, exist := p.mapping[protocol][extport]
 
-	// Destroying request
+	// Destroying a mapping
 	if lifeTime == 0 && extport == 0 {
 		if exist {
 			v.timer.Stop()
