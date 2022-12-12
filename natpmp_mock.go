@@ -2,6 +2,7 @@ package mocknat
 
 import (
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"math/rand"
 	"net"
@@ -92,6 +93,9 @@ func (p *mockNAT) ExternalIP() net.IP {
 }
 
 func (p *mockNAT) Close() error {
+	if atomic.LoadUint32(&p.isRun) == 0 {
+		return errors.New("already closed")
+	}
 	atomic.StoreUint32(&p.isRun, 0)
 	return p.conn.Close()
 }
@@ -107,6 +111,9 @@ func (p *mockNAT) Epoch() uint32 {
 }
 
 func (p *mockNAT) Run() {
+	if atomic.LoadUint32(&p.isRun) == 1 {
+		return
+	}
 	atomic.StoreUint32(&p.isRun, 1)
 	go p.run()
 }
