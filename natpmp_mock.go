@@ -123,6 +123,8 @@ func (p *mockNAT) run() {
 	go func() {
 		for {
 			time.Sleep(time.Millisecond)
+
+			// Check state is running
 			if atomic.LoadUint32(&p.isRun) == 0 {
 				return
 			}
@@ -131,9 +133,11 @@ func (p *mockNAT) run() {
 	}()
 
 	for {
+		// Check state is running
 		if atomic.LoadUint32(&p.isRun) == 0 {
 			return
 		}
+		// Read process
 		b := make([]byte, 12)
 		len, sender, err := p.conn.ReadFromUDP(b)
 		if err != nil {
@@ -211,7 +215,7 @@ func (p *mockNAT) handleMappingOpcode(b []byte, protocol string, opcode byte) (r
 	defer p.mu.Unlock()
 	v, exist := p.mapping[protocol][extport]
 
-	// Destroying request
+	// Destroying a mapping
 	if lifeTime == 0 && extport == 0 {
 		if exist {
 			v.timer.Stop()
