@@ -14,7 +14,7 @@ In cases like this, writing test scripts is obscure(e.g. NAT does not support PM
 - [x] MUST fill in the Seconds Since Start of Epoch field with the time elapsed since its port mapping table was initialized on startup, or reset for any other reason.
 - [x] If the result code is non-zero, the value of the External IPv4 Address field is undefined (MUST be set to zero on transmission, and MUST be ignored on reception).
 - [ ] MUST send a gratuitous response to the link-local multicast address 224.0.0.1, port 5350, with the packet format above, to notify clients of the external IPv4 address and Seconds Since Start of Epoch.
-- [ ] The Seconds Since Start of Epoch field in each transmission MUST be updated appropriately to reflect the passage of time, so as not to trigger unnecessary additional mapping renewals.
+- [x] The Seconds Since Start of Epoch field in each transmission MUST be updated appropriately to reflect the passage of time, so as not to trigger unnecessary additional mapping renewals.
 - [x] Implements this protocol MUST be able to create TCP-only and UDP-only port mappings.
 - [ ] MUST NOT automatically create mappings for TCP when the client requests UDP, and vice versa, the NAT gateway MUST reserve the companion port so the same client can choose to map it in the future. For example, if a client requests to map TCP port 80, as long as the client maintains the lease for that TCP port mapping, another client with a different internal IP address MUST NOT be able to successfully acquire the mapping for UDP port 80.
 - [x] MUST return an available external port if possible, or return an error code if no external ports are available.
