@@ -4,7 +4,6 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"math/rand"
 	"net"
 	"sync"
 	"sync/atomic"
@@ -22,6 +21,7 @@ const (
 
 type mockNAT struct {
 	conn       *net.UDPConn
+	listenAddr *net.UDPAddr
 	externalIP net.IP
 	epoch      uint32
 
@@ -45,12 +45,9 @@ func New(listenIP net.IP, externalIP net.IP, supportPMP bool) *mockNAT {
 	if err != nil {
 		panic(err)
 	}
-	conn, err := net.ListenUDP("udp", addr)
-	if err != nil {
-		panic(err)
-	}
 	nat := &mockNAT{
-		conn:       conn,
+		conn:       nil,
+		listenAddr: addr,
 		externalIP: externalIP,
 		mapping:    makeProtocolMap(),
 	}
@@ -114,6 +111,12 @@ func (p *mockNAT) Run() {
 	if atomic.LoadUint32(&p.isRun) == 1 {
 		return
 	}
+	var err error
+	p.conn, err = net.ListenUDP("udp", p.listenAddr)
+	if err != nil {
+		panic(err)
+	}
+
 	atomic.StoreUint32(&p.isRun, 1)
 	go p.run()
 }
@@ -282,13 +285,11 @@ func (p *mockNAT) addExternal(protocol string, extport, intport uint16, duration
 //
 // The caller must hold p.mu.
 func (p *mockNAT) suggestExternalPort(protocol string) uint16 {
-	for i := 0; i < 65535-1025; i++ {
-		extport := uint16(rand.Intn(65535-1025) + 1025)
-		if _, ok := p.mapping[protocol][extport]; !ok {
-			return extport
+	for i := uint16(1024); i < 65535; i++ {
+		if _, ok := p.mapping[protocol][i]; !ok {
+			return i
 		}
 	}
-
 	panic("Out of resources")
 }
 
