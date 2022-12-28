@@ -9,8 +9,9 @@ import (
 
 func TestExternalIP(t *testing.T) {
 	nat := New(net.IPv4(127, 0, 0, 1), net.IPv4(1, 1, 1, 1), true)
-	defer nat.Close()
+
 	nat.Run()
+	defer nat.Close()
 
 	client := natpmp.NewClient(net.IPv4(127, 0, 0, 1))
 	result, err := client.GetExternalAddress()
@@ -26,8 +27,9 @@ func TestExternalIP(t *testing.T) {
 
 func TestAddPortMapping(t *testing.T) {
 	nat := New(net.IPv4(127, 0, 0, 1), net.IPv4(1, 1, 1, 1), true)
-	defer nat.Close()
+
 	nat.Run()
+	defer nat.Close()
 
 	var result *natpmp.AddPortMappingResult
 	var err error
@@ -45,5 +47,30 @@ func TestAddPortMapping(t *testing.T) {
 	if internal := nat.Map("udp", 5001); internal != nil {
 		t.Fatal("")
 	}
+}
 
+func TestSuggestPortMapping(t *testing.T) {
+	nat := New(net.IPv4(127, 0, 0, 1), net.IPv4(1, 1, 1, 1), true)
+
+	nat.Run()
+	defer nat.Close()
+
+	var result *natpmp.AddPortMappingResult
+	var err error
+
+	client := natpmp.NewClient(net.IPv4(127, 0, 0, 1))
+	result, err = client.AddPortMapping("udp", 2000, 0, 30)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result.MappedExternalPort != 1024 {
+		t.Fatal("")
+	}
+	result, err = client.AddPortMapping("udp", 2000, 0, 30)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result.MappedExternalPort != 1025 {
+		t.Fatal("")
+	}
 }
