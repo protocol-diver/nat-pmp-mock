@@ -278,7 +278,7 @@ func (p *mockNAT) addExternal(protocol string, extport, intport uint16, duration
 	}(e.timer)
 }
 
-// suggestExternalPort returns a random port number. Originally
+// suggestExternalPort returns a available port number. Originally
 // it should respond with an 'Out of resources' error if it
 // expected all port numbers to be in use, but currently it simply
 // causes a panic.
